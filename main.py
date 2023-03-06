@@ -10,15 +10,10 @@
 #   - Grid Pieces are Tiles, using flyweight as an optimization method + cool stuff
 import pygame
 
-if __name__ == "__main__":
-    pygame.init()
-    WIDTH,HEIGHT = 960,540
-    SCREEN = pygame.display.set_mode((WIDTH,HEIGHT))
-    gaming = True
+import SuicideGame
 
-    while gaming:
-        for events in pygame.event.get():
-            if pygame.key.get_pressed()[pygame.K_ESCAPE] or events.type == pygame.QUIT:
-                gaming = False
+if __name__ == "__main__":
+    GM = SuicideGame.GameManager()
+    GM.Main()
 
     print("Game End")
