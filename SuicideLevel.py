@@ -11,14 +11,14 @@
 import json
 
 import pygame
-import AABB
+
 import SuicideTiles
 
 
 class Level:
     # Each level is 32x25
     blocksize = 32
-    LevelSize = 800# num of pixels
+    LevelSize = 800 # num of pixels
     resolution = int(LevelSize/blocksize)   # Res of 25
 
     def __init__(self,levelJSON):
@@ -48,13 +48,10 @@ def TestLevel():
     for x in range(Level.resolution):
         col = []
         for y in range(Level.resolution):
-            print(y)
+            # Edges
             if y == 0 or y == 24 or x == 0 or x == 24:
-                #Rect = pygame.Rect(x * Level.blocksize, y * Level.blocksize, Level.blocksize, Level.blocksize)
                 Block = SuicideTiles.Rock(x*Level.blocksize,y*Level.blocksize,Level.blocksize,Level.blocksize)
                 col.append(Block)
         level.append(col)
-    print()
-    print(len(level))
     return level
 

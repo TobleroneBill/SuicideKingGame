@@ -7,7 +7,6 @@
 #       Water - not solid, slows movement and can kill after a long time (when breath runs out)
 #       Hot Coals - Doesnt kill, but makes player jump like mario 64 in lava
 import pygame
-
 import AABB
 
 

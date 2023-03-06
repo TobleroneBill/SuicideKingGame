@@ -13,6 +13,13 @@ class AABB:
     def UpdatePos(self,newx,newy):
         self.x = newx
         self.y = newy
+        self.rect.y = newy
+        self.rect.x = newx
+
+    def DrawHitBox(self,screen):
+        pygame.draw.rect(screen,(255,0,0),self.rect,5)
 
     def CheckCollision(self,otherRect):
-        pass
+        # pygame has this built in, but is just:
+        # if any of the points of the rect are inside of the collider, then true else false
+        return self.rect.colliderect(otherRect)
