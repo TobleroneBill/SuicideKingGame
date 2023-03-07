@@ -18,7 +18,8 @@ import AABB
 
 class Entity:
     def __init__(self, x, y,width,height,LevelBlocks,screenref):
-        self.Gravity = 1
+        self.Gravity = 0.1
+        self.Grounded = False
         self.x_ = x
         self.y_ = y
         self.xVel = 0
@@ -47,47 +48,65 @@ class Entity:
         pygame.draw.rect(self.screen,(0,255,255),CheckRect,5)
         #print(self.x_+self.HITBOX.w)
         count = 0
+        nextx = self.x_ + self.xVel
+        nexty = self.y_ + self.yVel
         for x in self.LevelBlocks:
-            for y in x:
-
+            for Geo in x:
                 # check if x and y is within check range (pointless to check every block
                 # if left of entity
                 #pygame.rect.Rect.colliderect()
-                if y.aabb.rect.colliderect(CheckRect):
+                if Geo.aabb.rect.colliderect(CheckRect):
                     count+=1
                     #_________________X COLLISION_________________#
-                    if self.HITBOX.CheckCollision(y.aabb) and y.aabb.x < self.x_:   #Left
-                        self.xVel = 0
-                        self.x_ = y.aabb.x+ y.aabb.w
-                        print('left Collide')
-                        return
-                    if self.HITBOX.CheckCollision(y.aabb):      # Right
-                        self.xVel = 0
-                        self.x_ = y.aabb.x - self.HITBOX.w
-                        print('Right Collide')
-                        return
-                    #_________________Y COLLISION_________________#
-                    if self.HITBOX.CheckCollision(y.aabb)  and y.aabb.y > self.y_:      # Down
-                        self.yVel = 0
-                        self.x_ = y.aabb.y - self.HITBOX.h
-                        print('BotCOllide')
-                        return
-                    if self.HITBOX.CheckCollision(y.aabb):      # Up
-                        self.xVel = 0
-                        self.x_ = y.aabb.x - self.HITBOX.w
-                        print('Right Collide')
-                        return
+                    if self.HITBOX.CheckCollision(Geo.aabb):
+                        # if this is negative (Usually positive because 0,0 starts from top left), move Left
+                        print( nextx - Geo.aabb.x)
+                        if nextx - Geo.aabb.x != 0:
+                            if nextx - Geo.aabb.x > 0:
+                                self.xVel = 0
+                                self.x_ = Geo.aabb.x + Geo.aabb.w
+                                print('left Collide')
+                            else:
+                                self.xVel = 0
+                                self.x_ = Geo.aabb.x - self.HITBOX.w
+                                print('Right Collide')
 
-       # print(count)
-                #if y.aabb.y > self.y_ - CheckRange or y.aabb.y > self.y_ - CheckRange:
-                #    if self.HITBOX.CheckCollision(y.aabb):
-                #        print('Y Collide')
+                        if nexty - Geo.aabb.y != 0:
+                            if nexty - Geo.aabb.y > 0:
+                                self.Grounded = True
+                                self.yVel = 0
+                                self.y_ = Geo.aabb.y - self.HITBOX.h
+                                print('Bot Collide')
 
+        if count == 0:
+            print("no blocks in range")
+
+    '''
+    # OLD COLLISION METHOD (Initial Try)            
+    # Left
+    if Geo.aabb.x < self.x_:
+        self.xVel -= self.xVel
+        self.x_ = Geo.aabb.x + Geo.aabb.w
+        print('left Collide')
+    # Right
+    if Geo.aabb.x > self.x_: # + self.HITBOX.w: # If its already collided, then we dont need to adjust for that
+        self.xVel -= self.xVel
+        self.x_ = Geo.aabb.x - self.HITBOX.w
+        print('Right Collide')
+    #_________________Y COLLISION_________________#
+    if Geo.aabb.y > self.y_:    # Below
+        self.yVel = 0
+        self.y_ = Geo.aabb.y + Geo.aabb.h
+        print('Bottom Collide')
+    '''
 
     def Movement(self):
         # Check For Collision
-        if self.yVel < 20:
+        if self.yVel < 20 and not self.Grounded:
+            pass
             self.yVel += self.Gravity
+        scalar = 3
+        pygame.draw.line(self.screen,(255,255,0),(self.x_,self.y_),(self.x_ + (self.xVel * self.HITBOX.w),self.y_ + (self.yVel * self.HITBOX.w)))
         self.CheckNearBlocks()
 
         # Update axis movement
@@ -99,6 +118,7 @@ class Entity:
             self.xVel += 0.5
         if self.xVel > 0:
             self.xVel -= 0.5
+
 
 
         self.HITBOX.UpdatePos(self.x_,self.y_)
