@@ -11,6 +11,8 @@
 #           King of clubs - Free x,y patrol movement
 #   Extra Life
 #   2-10 of diamonds - Adds score. Each type = number of diamonds
+import sys
+
 import pygame
 
 import AABB
@@ -33,53 +35,120 @@ class Entity:
 
 
     def M_LEFT(self):
-        if self.xVel > -15:
+        if self.xVel > -12:
             self.xVel -= self.speed
 
     def M_RIGHT(self):
-        if self.xVel < 15:
+        if self.xVel < 12:
             self.xVel += self.speed
 
 
     #TODO: Collision
     def CheckNearBlocks(self):
-        CheckRange = 16
-        CheckRect = pygame.Rect((self.x_ - CheckRange,self.y_ - CheckRange),(self.HITBOX.w + (CheckRange*2) ,self.HITBOX.h + (CheckRange*2)))
-        pygame.draw.rect(self.screen,(0,255,255),CheckRect,5)
-        #print(self.x_+self.HITBOX.w)
+        # number of Geometry Nodes Collided with
         count = 0
+        # new position to check
         nextx = self.x_ + self.xVel
         nexty = self.y_ + self.yVel
+        NextRect = pygame.Rect((nextx,nexty),(self.HITBOX.w,self.HITBOX.h))
+
+        #deubg visualisation
+        pygame.draw.rect(self.screen,(0,255,255),NextRect,5)
+        pygame.draw.line(self.screen,(255,255,255),(self.x_,self.y_),(nextx,nexty ),10)
+
+        # List of collided Tiles
+        colliders = []
         for x in self.LevelBlocks:
             for Geo in x:
-                # check if x and y is within check range (pointless to check every block
-                # if left of entity
-                #pygame.rect.Rect.colliderect()
-                if Geo.aabb.rect.colliderect(CheckRect):
-                    count+=1
-                    #_________________X COLLISION_________________#
-                    if self.HITBOX.CheckCollision(Geo.aabb):
-                        # if this is negative (Usually positive because 0,0 starts from top left), move Left
-                        print( nextx - Geo.aabb.x)
-                        if nextx - Geo.aabb.x != 0:
-                            if nextx - Geo.aabb.x > 0:
-                                self.xVel = 0
-                                self.x_ = Geo.aabb.x + Geo.aabb.w
-                                print('left Collide')
-                            else:
-                                self.xVel = 0
-                                self.x_ = Geo.aabb.x - self.HITBOX.w
-                                print('Right Collide')
+                # If next position collides with Level data
+                if Geo.aabb.rect.colliderect(NextRect):
+                    colliders.append(Geo)
+                    count += 1
 
-                        if nexty - Geo.aabb.y != 0:
-                            if nexty - Geo.aabb.y > 0:
-                                self.Grounded = True
-                                self.yVel = 0
-                                self.y_ = Geo.aabb.y - self.HITBOX.h
-                                print('Bot Collide')
+        if colliders.__len__() != 0:
+            print("#################COLLISION CHECK################")
+            print("--------------------------------")
+            print(f'NextPos X: {NextRect.x}, Y: {NextRect.y}')
+            print("--------------------------------")
+            for no,tile in enumerate(colliders):
+                newY = NextRect.y - tile.aabb.y
+                newX = NextRect.x - tile.aabb.x
 
-        if count == 0:
-            print("no blocks in range")
+                print(f'CollideTile no {no} X: {tile.aabb.x}, Y: {tile.aabb.y}')
+                print(f'''ABS of of positions:
+                      X: {abs(newX)}
+                      y: {abs(newY)}''')
+                # if x intercept is less than y intercept, x takes precidence (because it has the shallow axis)
+                if abs(newX) > abs(newY):
+                    if newX > 0:
+                        self.x_ = tile.aabb.x + tile.aabb.w + (-self.xVel)
+                        self.xVel = 0
+                        print('left Collide')
+                    else:
+                        pass
+                        self.x_ = tile.aabb.x - self.HITBOX.w - (+self.xVel)
+                        self.xVel = 0
+                        print('Right Collide')
+                # Y precidence
+                else:
+                    # TODO: Sliding isnt supported
+                    if newY < 0:
+                        self.y_ = tile.aabb.y - self.HITBOX.w - self.yVel
+                        self.yVel = 0
+                        self.Grounded = True
+                        print('Bot Collide')
+                    else:
+                        self.y_ = tile.aabb.y + tile.aabb.w
+                        self.yVel = -self.yVel
+                        print('Top Collide')
+
+            #print(colliders)
+    '''
+    # Another Failed Attempt #
+        # Get the closest axis positions of all the detected colliders 
+        minX = None
+        minY = None
+        if colliders.__len__() > 1:
+            # Find the closest Collider positions
+            for Geo in colliders:
+                if minX is None and minY is None:
+                    minX = Geo.aabb.x
+                    minY = Geo.aabb.y
+                    continue
+
+                # This will only run if number of colliders is greater than 1
+                # get the difference of the next rect and the minx, and the geo x. Whichever one is smaller will be minX
+                if Geo.aabb.x - NextRect.x < minX - NextRect.x:
+                    minX = Geo.aabb.x
+
+                # Same as above
+                if Geo.aabb.Y - NextRect.y < minY - NextRect.y:
+                    minY = Geo.aabb.y
+        else:
+            minX = colliders[0].aabb.x
+            minY = colliders[0].aabb.y
+
+        #_________________COLLISION RESPONSE_________________#
+            
+            # With the saved knowledge of the closest X and Y positions to the NextPosition, we know what Dir to push
+            # The player (actually we dont lol)
+            
+            
+        xintersect = nextx - closestX
+        yintersect = nexty - closestY
+
+        # if this is negative (Usually positive but 0,0 starts from top left), move Left
+        # if y is smaller than x, then we need to collide with y axis because it is closer than than the x
+
+        if xintersect > 0:
+            self.xVel = 0
+            self.x_ = Geo.aabb.x + Geo.aabb.w
+            print('left Collide')
+        else:
+            self.xVel = 0
+            self.x_ = Geo.aabb.x - self.HITBOX.w
+            print('Right Collide')
+            '''
 
     '''
     # OLD COLLISION METHOD (Initial Try)            
@@ -103,10 +172,9 @@ class Entity:
     def Movement(self):
         # Check For Collision
         if self.yVel < 20 and not self.Grounded:
-            pass
             self.yVel += self.Gravity
-        scalar = 3
-        pygame.draw.line(self.screen,(255,255,0),(self.x_,self.y_),(self.x_ + (self.xVel * self.HITBOX.w),self.y_ + (self.yVel * self.HITBOX.w)))
+            pass
+
         self.CheckNearBlocks()
 
         # Update axis movement

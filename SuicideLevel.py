@@ -1,4 +1,5 @@
 # Maybe should be Json with the level data, but just holds each levels data
+# Levels are 25x25 square tiles with a size of 32
 # (One screen big, so shouldnt bee too huge)
 
 # aiming for around 52 levels to be thematically accurate
